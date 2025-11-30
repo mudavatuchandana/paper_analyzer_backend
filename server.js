@@ -161,7 +161,9 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
 
   try {
     const response = await axios.post(
-      `${process.env.PYTHON_API_URL || "http://localhost:8000"}/upload`,
+      `${
+        process.env.PYTHON_API_URL || "https://analyzer-script-4ohb.vercel.app/"
+      }/upload`,
       form,
       {
         headers: form.getHeaders(),
@@ -177,6 +179,30 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
       message: "AI processing failed",
       error: err.response?.data || err.message,
     });
+  }
+});
+
+// ———————— CHAT ENDPOINT (POLLING) — WORKS ON VERCEL ————————
+app.post("/api/chat", verifyToken, async (req, res) => {
+  const { session_id, message } = req.body;
+
+  if (!session_id || !message) {
+    return res.status(400).json({ error: "session_id and message required" });
+  }
+
+  try {
+    const response = await axios.post(
+      `${
+        process.env.PYTHON_API_URL || "https://analyzer-script-4ohb.vercel.app"
+      }/chat`,
+      { session_id, message },
+      { headers: { "Content-Type": "application/json" }, timeout: 90000 }
+    );
+
+    res.json({ answer: response.data.answer });
+  } catch (err) {
+    console.error("Chat error:", err.response?.data || err.message);
+    res.status(500).json({ error: "AI response failed" });
   }
 });
 
