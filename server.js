@@ -18,7 +18,31 @@ const PORT = process.env.PORT || 3001; // you changed to 3001
 // ---------- CORS ----------
 app.use(
   cors({
-    origin: "http://localhost:3000", // React dev server
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+
+      const allowedOrigins = [
+        "http://localhost:3000",
+        "https://umnpaperanalyzer.netlify.app",
+      ];
+
+      // Allow any Netlify subdomain (main + preview deploys)
+      if (
+        origin.startsWith("http://localhost:") ||
+        (origin.startsWith("https://") &&
+          origin.endsWith(".netlify.app") &&
+          origin.includes("umnpaperanalyzer"))
+      ) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );
